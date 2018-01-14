@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Repository\ConversationsRepository;
 use App\User;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Http\Request;
 
 class ConversationsController extends Controller {
 
@@ -44,7 +45,23 @@ class ConversationsController extends Controller {
     public function show(User $user) {
         return view('conversations.show', [
             'users' => $this->conversationsRepository->getConversations($this->auth->user()->id),
-            'user' => $user
+            'user' => $user,
+            'messages' => $this->conversationsRepository->getMessagesFor($this->auth->user()->id, $user->id)->get()->reverse()
         ]);
+    }
+
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function store(User $user, Request $request) {
+        $this->conversationsRepository->createMassage(
+            $request->get('content'),
+            $this->auth->user()->id,
+            $user->id
+        );
+
+        return redirect()->route('conversations.show', ['id' => $user->id]);
     }
 }
