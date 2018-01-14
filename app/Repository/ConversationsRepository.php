@@ -36,6 +36,8 @@ class ConversationsRepository {
     }
 
     /**
+     * Get conversations for user's connected
+     *
      * @param int $userId
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
@@ -47,6 +49,8 @@ class ConversationsRepository {
     }
 
     /**
+     * Create a message for the conversation
+     *
      * @param string $content
      * @param int $from
      * @param int $to
@@ -63,6 +67,8 @@ class ConversationsRepository {
 
 
     /**
+     * Retrieves the messages corresponding to the conversation
+     *
      * @param int $from
      * @param int $to
      * @return Builder
@@ -76,5 +82,35 @@ class ConversationsRepository {
                     return $query->select('name', 'id');
                 }
             ]);
+    }
+
+    /**
+     *
+     * Get the number of unread messages for each conversation
+     *
+     * @param int $userId
+     * @return Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Query\Builder[]|\Illuminate\Support\Collection
+     */
+    public function unreadCount(int $userId) {
+        return $this->message->newQuery()
+            ->where('to_id', $userId)
+            ->groupBy('from_id')
+            ->selectRaw('from_id, COUNT(id) AS count')
+            ->whereRaw('read_at IS NULL')
+            ->get()
+            ->pluck('count', 'from_id');
+    }
+
+    /**
+     * Mark all user's messages as read
+     *
+     * @param int $from
+     * @param int $to
+     */
+    public function readAllFrom(int $from, int $to) {
+        $this->message
+            ->where('from_id', $from)
+            ->where('to_id', $to)
+            ->update(['read_at' => Carbon::now()]);
     }
 }

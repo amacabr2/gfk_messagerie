@@ -34,8 +34,10 @@ class ConversationsController extends Controller {
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index() {
+        $me = $this->auth->user();
         return view('conversations.index', [
-            'users' => $this->conversationsRepository->getConversations($this->auth->user()->id)
+            'users' => $this->conversationsRepository->getConversations($me->id),
+            'unread' => $this->conversationsRepository->unreadCount($me->id)
         ]);
     }
 
@@ -44,10 +46,19 @@ class ConversationsController extends Controller {
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function show(User $user) {
+        $me = $this->auth->user();
+        $unread = $this->conversationsRepository->unreadCount($me->id);
+
+        if (isset($unread[$user->id])) {
+            $this->conversationsRepository->readAllFrom($user->id, $me->id);
+             unset($unread[$user->id]);
+        }
+
         return view('conversations.show', [
-            'users' => $this->conversationsRepository->getConversations($this->auth->user()->id),
+            'users' => $this->conversationsRepository->getConversations($me->id),
             'user' => $user,
-            'messages' => $this->conversationsRepository->getMessagesFor($this->auth->user()->id, $user->id)->paginate(20)
+            'messages' => $this->conversationsRepository->getMessagesFor($me->id, $user->id)->paginate(20),
+            'unread' => $unread
         ]);
     }
 
