@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMessageRequest;
 use App\Repository\ConversationsRepository;
 use App\User;
 use Illuminate\Auth\AuthManager;
@@ -52,10 +53,10 @@ class ConversationsController extends Controller {
 
     /**
      * @param User $user
-     * @param Request $request
+     * @param StoreMessageRequest $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(User $user, Request $request) {
+    public function store(User $user, StoreMessageRequest $request) {
         $this->conversationsRepository->createMassage(
             $request->get('content'),
             $this->auth->user()->id,

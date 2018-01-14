@@ -19,6 +19,7 @@
                                     </p>
                                 </div>
                             </div>
+                            <hr>
                         @empty
                             <div class="row">
                                 <div class="col-md-10">
@@ -30,7 +31,10 @@
                         <form action="" method="post">
                             {{ csrf_field() }}
                             <div class="form-group">
-                                <textarea name="content" id="content" class="form-control" placeholder="Ecrivez votre message"></textarea>
+                                <textarea name="content" id="content" class="form-control {{ $errors->has('content') ? 'is-invalid' : ''}}" placeholder="Ecrivez votre message"></textarea>
+                                @if($errors->has('content'))
+                                    <div class="invalid-feedback">{{ implode(', ', $errors->get('content')) }}</div>
+                                @endif
                             </div>
                             <button class="btn btn-primary" type="submit">Envoyer</button>
                         </form>
