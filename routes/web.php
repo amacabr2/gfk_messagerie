@@ -18,3 +18,6 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/conversations', 'ConversationsController@index')->name('conversations.index');
+Route::get('/conversations/{id}', 'ConversationsController@show')->name('conversations.show');

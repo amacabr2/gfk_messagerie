@@ -15,6 +15,7 @@
                     @endif
 
                     You are logged in!
+                    For tchat it's <a href="{{ route('conversations.index') }}">here</a>
                 </div>
             </div>
         </div>
