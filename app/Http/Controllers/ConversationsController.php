@@ -36,11 +36,7 @@ class ConversationsController extends Controller {
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index() {
-        $me = $this->auth->user();
-        return view('conversations.index', [
-            'users' => $this->conversationsRepository->getConversations($me->id),
-            'unread' => $this->conversationsRepository->unreadCount($me->id)
-        ]);
+        return view('conversations.index');
     }
 
     /**
