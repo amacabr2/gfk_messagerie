@@ -23,24 +23,36 @@ const get = async function (url) {
 export default new Vuex.Store({
     strict: true,
     state: {
-        conversations: {}
+        conversations: {},
+        user: null
     },
     getters: {
-       conversations: function (state) {
-           return state.conversations
-       },
-       messages: function (state) {
-           return function (id) {
-               let conversation = state.conversations[id]
-               if (conversation && conversation.messages) {
-                   return conversation.messages
-               } else {
-                   return []
-               }
-           }
-       }
+        user: function (state) {
+           return state.user
+        },
+        conversations: function (state) {
+            return state.conversations
+        },
+        conversation: function (state) {
+            return function (id) {
+                return state.conversations[id] || {}
+            }
+        },
+        messages: function (state) {
+            return function (id) {
+                let conversation = state.conversations[id]
+                if (conversation && conversation.messages) {
+                    return conversation.messages
+                } else {
+                    return []
+                }
+            }
+        }
     },
     mutations: {
+        setUser: function(state, userId) {
+            state.user = userId
+        },
         addConversations: function (state, {conversations}) {
             conversations.forEach(function (c) {
                 let conversation = state.conversations[c.id] || {}
@@ -51,6 +63,7 @@ export default new Vuex.Store({
         addMessages: function (state, {messages, id}) {
             let conversation = state.conversations[id] || {}
             conversation.messages = messages
+            conversation.loaded = true
             state.conversations = {...state.conversations, ...{[id]: conversation}}
         }
     },
@@ -59,10 +72,11 @@ export default new Vuex.Store({
             let response = await get('/api/conversations')
             context.commit('addConversations', {conversations: response.conversations})
         },
-        loadMessages: async function(context, conversationId) {
-            let response = await get('/api/conversations/' + conversationId)
-            console.log(response)
-            context.commit('addMessages', {messages: response.messages, id: conversationId})
+        loadMessages: async function (context, conversationId) {
+            if (!context.getters.conversation(conversationId).loaded) {
+                let response = await get('/api/conversations/' + conversationId)
+                context.commit('addMessages', {messages: response.messages, id: conversationId})
+            }
         }
     }
 })

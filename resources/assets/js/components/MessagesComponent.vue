@@ -5,7 +5,7 @@
         </div>
         <div class="card-body">
             <div v-for="message in messages">
-                <Message :message="message" ></Message>
+                <Message :message="message" :user="user"></Message>
             </div>
         </div>
     </section>
@@ -13,16 +13,28 @@
 
 <script>
     import Message from './MessageComponent'
+    import {mapGetters} from 'vuex'
 
     export default {
         components: {Message},
         computed: {
+            ...mapGetters(['user']),
             messages: function () {
                 return this.$store.getters.messages(this.$route.params.id)
             }
         },
         mounted() {
-            this.$store.dispatch('loadConversations', this.$route.params.id)
+            this.loadConverstion()
+        },
+        watch: {
+            '$route.params.id': function () {
+                this.loadConverstion()
+            }
+        },
+        methods: {
+            loadConverstion() {
+                this.$store.dispatch('loadMessages', this.$route.params.id)
+            }
         }
     }
 </script>

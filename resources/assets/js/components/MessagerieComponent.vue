@@ -28,17 +28,8 @@
             ...mapGetters(['conversations'])
         },
         mounted() {
-            this.loadConverstion()
-        },
-        watch: {
-           '$route.params.id': function () {
-               this.loadConverstion()
-           }
-        },
-        methods: {
-            loadConverstion() {
-                this.$store.dispatch('loadMessages', this.$route.params.id)
-            }
+            this.$store.dispatch('loadConversations', this.$route.params.id)
+            this.$store.commit('setUser', this.user)
         }
     }
 </script>
