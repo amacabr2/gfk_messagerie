@@ -1,16 +1,20 @@
 <template>
-   <div class="row">
+   <section class="row">
        <div class="col-md-3">
            <div class="list-group">
                 <template v-for="conversation in conversations">
-                    <a  class="list-group-item d-flex justify-content-between align-items-center">
+                    <router-link :to="{name: 'conversations', params: {id: conversation.id}}" class="list-group-item d-flex justify-content-between align-items-center">
                         {{ conversation.name }}
                         <span class="badge badge-pill badge-primary" v-if="conversation.unread">{{ conversation.unread }}</span>
-                    </a>
+                    </router-link>
                 </template>
            </div>
        </div>
-   </div>
+
+       <div class="col-md-9">
+           <router-view></router-view>
+       </div>
+   </section>
 </template>
 
 <script>
@@ -24,7 +28,17 @@
             ...mapGetters(['conversations'])
         },
         mounted() {
-            this.$store.dispatch('loadConversations')
+            this.loadConverstion()
+        },
+        watch: {
+           '$route.params.id': function () {
+               this.loadConverstion()
+           }
+        },
+        methods: {
+            loadConverstion() {
+                this.$store.dispatch('loadMessages', this.$route.params.id)
+            }
         }
     }
 </script>
