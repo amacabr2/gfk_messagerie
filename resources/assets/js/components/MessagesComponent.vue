@@ -3,7 +3,7 @@
         <div class="card-header">
             John
         </div>
-        <div class="card-body">
+        <div class="card-body messagerie_body">
             <div v-for="message in messages">
                 <Message :message="message" :user="user"></Message>
             </div>
@@ -54,8 +54,15 @@
             }
         },
         methods: {
-            loadConverstion() {
-                this.$store.dispatch('loadMessages', this.$route.params.id)
+            async loadConverstion() {
+                await this.$store.dispatch('loadMessages', this.$route.params.id)
+                this.scrollBot()
+            },
+            scrollBot() {
+                let messages = this.$el.querySelector('.messagerie_body')
+                this.$nextTick(_ => {
+                    messages.scrollTop = messages.scrollHeight
+                })
             },
             async sendMessage(e) {
                 if (event.target.tagName === "BUTTON") {
@@ -73,6 +80,7 @@
                             userId: this.$route.params.id
                         })
                         this.content = ""
+                        this.scrollBot()
                     } catch (e) {
                         this.errors = e.errors
                     }
