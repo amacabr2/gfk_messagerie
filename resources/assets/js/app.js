@@ -4,6 +4,8 @@ import Messagerie from './components/MessagerieComponent'
 import Messages from './components/MessagesComponent'
 import store from './store/store'
 
+// 1.02.11
+
 Vue.use(VueRouter)
 
 let messagerie = document.querySelector('#messagerie')

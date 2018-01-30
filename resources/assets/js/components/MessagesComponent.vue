@@ -7,6 +7,16 @@
             <div v-for="message in messages">
                 <Message :message="message" :user="user"></Message>
             </div>
+
+            <form action="" method="post">
+                <div class="form-group">
+                    <textarea name="content" id="content"
+                              :class="{'form-control' : true, 'is-invalid': errors['content']}" v-model="content"
+                              placeholder="Ecrivez votre message" @keypress.enter="sendMessage"></textarea>
+                    <div class="invalid-feedback" v-if="errors['content']">{{ errors['content'].join() }}</div>
+                </div>
+                <button class="btn btn-primary" @click="sendMessage">Envoyer</button>
+            </form>
         </div>
     </section>
 </template>
@@ -17,6 +27,12 @@
 
     export default {
         components: {Message},
+        data() {
+            return {
+                content: '',
+                errors: {},
+            }
+        },
         computed: {
             ...mapGetters(['user']),
             messages: function () {
@@ -34,6 +50,26 @@
         methods: {
             loadConverstion() {
                 this.$store.dispatch('loadMessages', this.$route.params.id)
+            },
+            async sendMessage(e) {
+                if (event.target.tagName === "BUTTON") {
+                    e.preventDefault()
+                }
+
+                if (e.shiftKey === false) {
+                    this.errors = {}
+                    e.preventDefault()
+
+                    try {
+                        await this.$store.dispatch('sendMessage', {
+                            content: this.content,
+                            userId: this.$route.params.id
+                        })
+                        this.content = ""
+                    } catch (e) {
+                        this.errors = e.errors
+                    }
+                }
             }
         }
     }
