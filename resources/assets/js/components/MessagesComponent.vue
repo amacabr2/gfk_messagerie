@@ -8,14 +8,19 @@
                 <Message :message="message" :user="user"></Message>
             </div>
 
-            <form action="" method="post">
+            <form action="" method="post" class="messagerie_form">
                 <div class="form-group">
                     <textarea name="content" id="content"
                               :class="{'form-control' : true, 'is-invalid': errors['content']}" v-model="content"
                               placeholder="Ecrivez votre message" @keypress.enter="sendMessage"></textarea>
                     <div class="invalid-feedback" v-if="errors['content']">{{ errors['content'].join() }}</div>
                 </div>
-                <button class="btn btn-primary" @click="sendMessage">Envoyer</button>
+                <div class="form-group">
+                    <button class="btn btn-primary" @click="sendMessage">Envoyer</button>
+                </div>
+                <div class="messagerie_loading" v-if="loading">
+                    <div class="loader"></div>
+                </div>
             </form>
         </div>
     </section>
@@ -31,6 +36,7 @@
             return {
                 content: '',
                 errors: {},
+                loading: false
             }
         },
         computed: {
@@ -58,6 +64,7 @@
 
                 if (e.shiftKey === false) {
                     this.errors = {}
+                    this.loading = true
                     e.preventDefault()
 
                     try {
@@ -69,6 +76,8 @@
                     } catch (e) {
                         this.errors = e.errors
                     }
+
+                    this.loading = false
                 }
             }
         }
