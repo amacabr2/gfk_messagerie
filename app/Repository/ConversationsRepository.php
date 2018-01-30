@@ -93,7 +93,7 @@ class ConversationsRepository {
      */
     public function unreadCount(int $userId) {
         return $this->message->newQuery()
-            ->where('to_id', $userId)
+            ->where('to_id', '=', $userId)
             ->groupBy('from_id')
             ->selectRaw('from_id, COUNT(id) AS count')
             ->whereRaw('read_at IS NULL')

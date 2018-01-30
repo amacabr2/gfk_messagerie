@@ -36,8 +36,19 @@ class ConversationsController extends Controller {
      * @return array
      */
     public function index(Request $request) {
+        $conversations = $this->conversationsRepository->getConversations($request->user()->id);
+        $unread = $this->conversationsRepository->unreadCount($request->user()->id);
+
+        foreach ($conversations as $conversation) {
+            if (isset($unread[$conversation->id])) {
+                $conversation->unread = $unread[$conversation->id];
+            } else {
+                $conversation->unread = 0;
+            }
+        }
+
         return [
-            'conversations' => $this->conversationsRepository->getConversations($request->user()->id)
+            'conversations' => $conversations
         ];
     }
 
@@ -48,15 +59,27 @@ class ConversationsController extends Controller {
      * @return array
      */
     public function show(Request $request, User $user) {
-        $messages = $this->conversationsRepository->getMessagesFor($request->user()->id, $user->id);
+        $messagesQuery = $this->conversationsRepository->getMessagesFor($request->user()->id, $user->id);
+        $count = null;
 
         if($before = $request->get('before')) {
-            $messages = $messages->where('created_at', '<', $request->get('before'));
+            $messagesQuery = $messagesQuery->where('created_at', '<', $request->get('before'));
+        } else {
+            $count = $messagesQuery->count();
+        }
+
+        $messages = $messagesQuery->limit(10)->get();
+
+        foreach ($messages as $message) {
+            if ($message->read_at === null && $message->to_id === $request->user()->id) {
+                $this->conversationsRepository->readAllFrom($message->from_id, $message->to_id);
+                break;
+            }
         }
 
         return [
-            'messages' => array_reverse($messages->limit(10)->get()->toArray()),
-            'count' => $before ? '' : $messages->count()
+            'messages' => array_reverse($messages->toArray()),
+            'count' => $count
         ];
     }
 
