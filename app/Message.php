@@ -18,4 +18,12 @@ class Message extends Model {
     public function from() {
         return $this->belongsTo(User::class, 'from_id');
     }
+
+    /**
+     * @param \DateTimeInterface $date
+     * @return string|void
+     */
+    public function serializeDate(\DateTimeInterface $date) {
+        return $date->format('c');
+    }
 }

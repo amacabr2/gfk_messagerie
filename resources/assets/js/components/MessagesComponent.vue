@@ -6,7 +6,7 @@
 
         <div class="card-body messagerie_body">
             <div v-for="message in messages">
-                <Message :message="message" :user="user"></Message>
+                <Message :message="message" :key="message.id" :user="user"></Message>
             </div>
 
             <form action="" method="post" class="messagerie_form">

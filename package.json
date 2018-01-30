@@ -14,9 +14,11 @@
         "laravel-mix": "^1.0"
     },
     "dependencies": {
+        "moment": "^2.20.1",
         "vue": "^2.5.13",
         "vue-router": "^3.0.1",
         "vuex": "^3.0.1",
+        "webpack-bundle-analyzer": "^2.9.2",
         "whatwg-fetch": "^2.0.3"
     }
 }
