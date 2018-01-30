@@ -1,8 +1,9 @@
 <template>
     <section class="card">
         <div class="card-header">
-            John
+            <h3>{{ name }}</h3>
         </div>
+
         <div class="card-body messagerie_body">
             <div v-for="message in messages">
                 <Message :message="message" :user="user"></Message>
@@ -18,10 +19,11 @@
                 <div class="form-group">
                     <button class="btn btn-primary" @click="sendMessage">Envoyer</button>
                 </div>
-                <div class="messagerie_loading" v-if="loading">
-                    <div class="loader"></div>
-                </div>
             </form>
+
+            <div class="messagerie_loading" v-if="loading">
+                <div class="loader"></div>
+            </div>
         </div>
     </section>
 </template>
@@ -43,10 +45,17 @@
             ...mapGetters(['user']),
             messages: function () {
                 return this.$store.getters.messages(this.$route.params.id)
+            },
+            name: function () {
+                return this.$store.getters.conversation(this.$route.params.id).name
+            },
+            count: function () {
+                return this.$store.getters.conversation(this.$route.params.id).count
             }
         },
         mounted() {
             this.loadConverstion()
+            this.messagesBody = this.$el.querySelector('.messagerie_body')
         },
         watch: {
             '$route.params.id': function () {
@@ -57,12 +66,29 @@
             async loadConverstion() {
                 await this.$store.dispatch('loadMessages', this.$route.params.id)
                 this.scrollBot()
+                if (this.messages.length < this.count) {
+                    this.messagesBody.addEventListener('scroll', this.onScroll)
+                }
             },
             scrollBot() {
-                let messages = this.$el.querySelector('.messagerie_body')
                 this.$nextTick(_ => {
-                    messages.scrollTop = messages.scrollHeight
+                    this.messagesBody.scrollTop = this.messagesBody.scrollHeight
                 })
+            },
+            async onScroll() {
+                if (this.messagesBody.scrollTop === 0) {
+                    this.loading = true
+                    this.messagesBody.removeEventListener('scroll', this.onScroll)
+                    let previousHeight = this.messagesBody.scrollHeight
+                    await this.$store.dispatch('loadPreviousMessages', this.$route.params.id)
+                    this.$nextTick(_ => {
+                        this.messagesBody.scrollTop = this.messagesBody.scrollHeight - previousHeight
+                    })
+                    if (this.messages.length < this.count) {
+                        this.messagesBody.addEventListener('scroll', this.onScroll)
+                    }
+                    this.loading = false
+                }
             },
             async sendMessage(e) {
                 if (event.target.tagName === "BUTTON") {

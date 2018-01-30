@@ -57,19 +57,35 @@ export default new Vuex.Store({
         },
         addConversations: function (state, {conversations}) {
             conversations.forEach(function (c) {
-                let conversation = state.conversations[c.id] || {messages: []}
+                let conversation = state.conversations[c.id] || {messages: [], count: 0}
                 conversation = {...conversation, ...c}
-                state.conversations = {...state.conversations, ...{[c.id]: conversation}}
+                state.conversations = {
+                    ...state.conversations,
+                    ...{[c.id]: conversation}
+                }
             })
         },
-        addMessages: function (state, {messages, id}) {
+        addMessages: function (state, {messages, id, count}) {
             let conversation = state.conversations[id] || {}
             conversation.messages = messages
+            conversation.count = count
             conversation.loaded = true
-            state.conversations = {...state.conversations, ...{[id]: conversation}}
+            state.conversations = {
+                ...state.conversations,
+                ...{[id]: conversation}
+            }
         },
         addMessage: function (state, {message, id}) {
+            state.conversations[id].count++;
             state.conversations[id].messages.push(message)
+        },
+        prependMessages: function (state, {messages, id}) {
+            let conversation = state.conversations[id] || {}
+            conversation.messages = [...messages, ...conversation.messages]
+            state.conversations = {
+                ...state.conversations,
+                ...{[id]: conversation}
+            }
         }
     },
     actions: {
@@ -80,7 +96,11 @@ export default new Vuex.Store({
         loadMessages: async function (context, conversationId) {
             if (!context.getters.conversation(conversationId).loaded) {
                 let response = await fetchApi('/api/conversations/' + conversationId)
-                context.commit('addMessages', {messages: response.messages, id: conversationId})
+                context.commit('addMessages', {
+                    messages: response.messages,
+                    id: conversationId,
+                    count: response.count
+                })
             }
         },
         sendMessage: async function(context, {content, userId}) {
@@ -90,11 +110,21 @@ export default new Vuex.Store({
                     content: content
                 })
             })
-
             context.commit('addMessage', {
                 message: response.message,
                 id: userId
             })
+        },
+        loadPreviousMessages: async function(context, conversationId) {
+            let message = context.getters.messages(conversationId)[0]
+            if (message) {
+                let url = '/api/conversations/' + conversationId + '?before=' + message.created_at
+                let response = await fetchApi(url)
+                context.commit('prependMessages', {
+                    messages: response.messages,
+                    id: conversationId
+                })
+            }
         }
     }
 })
