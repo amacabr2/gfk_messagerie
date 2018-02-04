@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import Echo from 'laravel-echo'
 
 Vue.use(Vuex)
 
@@ -133,6 +134,19 @@ export default new Vuex.Store({
                     id: conversationId
                 })
             }
+        },
+        setUser: function (context, userId) {
+            context.commit('setUser', userId)
+
+            new Echo({
+                broadcaster: 'socket.io',
+                host: window.location.hostname + ':6001'
+            })
+                .private(`App.User.${userId}`)
+                .listen('NewMessageEvent', function (e) {
+                    console.log(e)
+                    context.commit('addMessage', {message: e.message, id: e.message.from_id})
+                })
         }
     }
 })

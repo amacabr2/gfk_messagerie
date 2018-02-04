@@ -19,6 +19,7 @@
 
 <script>
     import {mapGetters} from 'vuex'
+    import Echo from 'laravel-echo'
 
     export default {
         props: {
@@ -29,7 +30,7 @@
         },
         mounted() {
             this.$store.dispatch('loadConversations', this.$route.params.id)
-            this.$store.commit('setUser', this.user)
+            this.$store.dispatch('setUser', this.user)
         }
     }
 </script>
