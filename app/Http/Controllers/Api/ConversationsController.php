@@ -15,6 +15,7 @@ use App\Http\Requests\StoreMessageRequest;
 use App\Message;
 use App\Repository\ConversationsRepository;
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ConversationsController extends Controller {
@@ -71,11 +72,15 @@ class ConversationsController extends Controller {
         }
 
         $messages = $messagesQuery->limit(10)->get();
+        $update = false;
 
         foreach ($messages as $message) {
             if ($message->read_at === null && $message->to_id === $request->user()->id) {
-                $this->conversationsRepository->readAllFrom($message->from_id, $message->to_id);
-                break;
+                $message->read_at = Carbon::now();
+                if ($update === false) {
+                    $this->conversationsRepository->readAllFrom($message->from_id, $message->to_id);
+                }
+                $update = true;
             }
         }
 

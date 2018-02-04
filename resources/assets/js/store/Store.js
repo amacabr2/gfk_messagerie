@@ -1,8 +1,15 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import Echo from 'laravel-echo'
+import Favico from 'favico.js'
 
 Vue.use(Vuex)
+
+const audio = new Audio('/notification.mp3')
+const title = document.title
+const favico = new Favico({
+    animation: 'none'
+})
 
 const fetchApi = async function (url, options = []) {
     let response = await fetch(url, {
@@ -23,8 +30,20 @@ const fetchApi = async function (url, options = []) {
     }
 }
 
+const updateTitle = function (conversations) {
+    let unread = Object.values(conversations).reduce((acc, conversation) => conversation.unread + acc, 0)
+    if (unread === 0) {
+        document.title = title
+        favico.reset()
+    } else {
+        document.title = `(${unread}) ${title}`
+        favico.badge(unread)
+    }
+}
+
 export default new Vuex.Store({
     strict: true,
+    openedConversations: [],
     state: {
         conversations: {},
         user: null
@@ -90,6 +109,23 @@ export default new Vuex.Store({
                 ...state.conversations,
                 ...{[id]: conversation}
             }
+        },
+        openedConversation: function (state, id) {
+            state.openedConversations = [id]
+        },
+        incrementUnread: function (state, id) {
+            let conversation = state.conversations[id]
+            if (conversation) {
+                conversation.unread++
+            }
+        }, readMessage: function (state, message) {
+            let conversation = state.conversations[message.from_id]
+            if (conversation && conversation.messages) {
+                let msg = conversation.messages.find(m => m.id === message.id)
+                if (msg) {
+                    msg.read_at = (new Date()).toISOString()
+                }
+            }
         }
     },
     actions: {
@@ -98,6 +134,8 @@ export default new Vuex.Store({
             context.commit('addConversations', {conversations: response.conversations})
         },
         loadMessages: async function (context, conversationId) {
+            context.commit('openedConversation', parseInt(conversationId, 10))
+
             if (!context.getters.conversation(conversationId).loaded) {
                 let response = await fetchApi('/api/conversations/' + conversationId)
 
@@ -106,9 +144,16 @@ export default new Vuex.Store({
                     id: conversationId,
                     count: response.count
                 })
-
-                context.commit('markAsRead', conversationId)
             }
+
+            context.getters.messages(conversationId).forEach(message => {
+                if (message.read_at === null && message.to_id === context.state.user) {
+                    context.dispatch('markAsRead', message)
+                }
+            })
+
+            context.commit('markAsRead', conversationId)
+            updateTitle(context.state.conversations)
         },
         sendMessage: async function(context, {content, userId}) {
             let response = await fetchApi('/api/conversations/' + userId, {
@@ -144,9 +189,20 @@ export default new Vuex.Store({
             })
                 .private(`App.User.${userId}`)
                 .listen('NewMessageEvent', function (e) {
-                    console.log(e)
                     context.commit('addMessage', {message: e.message, id: e.message.from_id})
+
+                    if (!context.state.openedConversations.includes(e.message.from_id) || document.hidden) {
+                        context.commit('incrementUnread', e.message.from_id)
+                        audio.play()
+                        updateTitle(context.state.conversations)
+                    } else {
+                        context.dispatch('markAsRead', e.message)
+                    }
                 })
+        },
+        markAsRead: function (context, message) {
+            fetchApi('/api/messages/' + message.id, {method: 'POST'})
+            context.commit('readMessage', message)
         }
     }
 })

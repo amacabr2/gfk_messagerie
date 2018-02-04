@@ -59,6 +59,11 @@
         mounted() {
             this.loadConverstion()
             this.messagesBody = this.$el.querySelector('.messagerie_body')
+
+            document.addEventListener('visibilitychange', this.onVisible)
+        },
+        destroyed() {
+            document.removeEventListener('visibilitychange', this.onVisible)
         },
         watch: {
             '$route.params.id': function () {
@@ -116,6 +121,11 @@
                     }
 
                     this.loading = false
+                }
+            },
+            onVisible() {
+                if (document.hidden === false) {
+                    this.$store.dispatch('loadMessages', this.$route.params.id)
                 }
             }
         }

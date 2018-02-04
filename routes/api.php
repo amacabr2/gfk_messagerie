@@ -21,4 +21,5 @@ Route::group(['middleware' => ['auth:api']], function () {
    Route::get('/conversations', 'Api\ConversationsController@index');
    Route::get('/conversations/{user}', 'Api\ConversationsController@show')->middleware('can:talkTo,user');
    Route::post('/conversations/{user}', 'Api\ConversationsController@store')->middleware('can:talkTo,user');
+   Route::post('/messages/{message}', 'Api\MessagesController@read')->middleware('can:read,message');
 });
