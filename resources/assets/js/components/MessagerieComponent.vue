@@ -1,5 +1,5 @@
 <template>
-   <section class="row">
+   <section class="row" style="margin-top: 4em;">
        <div class="col-md-3">
            <div class="list-group">
                 <template v-for="conversation in conversations">

@@ -9,8 +9,10 @@
 namespace App\Http\Controllers\Api;
 
 
+use App\Events\NewMessageEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMessageRequest;
+use App\Message;
 use App\Repository\ConversationsRepository;
 use App\User;
 use Illuminate\Http\Request;
@@ -90,11 +92,14 @@ class ConversationsController extends Controller {
      * @return array
      */
     public function store(User $user, StoreMessageRequest $request) {
+        /** @var Message $message */
         $message = $this->conversationsRepository->createMassage(
             $request->get('content'),
             $request->user()->id,
             $user->id
         );
+
+        broadcast(new NewMessageEvent($message));
 
         return [
             'message' => $message
